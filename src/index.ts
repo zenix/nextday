@@ -71,7 +71,11 @@ async function startServer() {
 
   try {
     const port = Number(process.env.PORT) || 3000;
-    await app.listen({ port, host: '0.0.0.0' });
+    const host = '0.0.0.0';
+    await app.listen({ port, host });
+    console.log(`\n🚀 Nextday is running natively!`);
+    console.log(`📱 Access it at: http://localhost:${port}`);
+    console.log(`🌐 On other devices: http://YOUR_TABLET_IP:${port}\n`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);
