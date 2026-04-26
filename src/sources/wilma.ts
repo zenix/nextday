@@ -6,6 +6,13 @@ export interface WilmaConfig {
   students: StudentInfo[];
 }
 
+function formatWilmaDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(d);
+  const dayMonth = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit' }).format(d).replace(/\//g, '.');
+  return `${weekday} ${dayMonth}`;
+}
+
 export async function fetchWilma(config: WilmaConfig, date: string, studentFilter?: string[]): Promise<KidData[] | SourceError> {
   try {
     const kidsData: KidData[] = [];
@@ -34,13 +41,13 @@ export async function fetchWilma(config: WilmaConfig, date: string, studentFilte
         .map(hw => ({
           subject: hw.subject,
           description: hw.homework,
-          dueDate: hw.date,
+          dueDate: formatWilmaDate(hw.date),
         }));
       const exams = overview.upcomingExams
         .filter(exam => exam.date >= date)
         .map(exam => ({
           subject: exam.subject,
-          date: exam.date,
+          date: formatWilmaDate(exam.date),
         }));
       kidsData.push({ name: 'My Schedule', schedule, homework, exams });
       return kidsData;
@@ -63,13 +70,13 @@ export async function fetchWilma(config: WilmaConfig, date: string, studentFilte
         .map(hw => ({
           subject: hw.subject,
           description: hw.homework,
-          dueDate: hw.date,
+          dueDate: formatWilmaDate(hw.date),
         }));
       const exams = overview.upcomingExams
         .filter(exam => exam.date >= date)
         .map(exam => ({
           subject: exam.subject,
-          date: exam.date,
+          date: formatWilmaDate(exam.date),
         }));
 
       kidsData.push({ name: student.name, schedule, homework, exams });

@@ -740,8 +740,10 @@
       if (dateStr === today) prefix = 'TODAY • ';
       else if (dateStr === tomorrow) prefix = 'TOMORROW • ';
 
-      const options = { weekday: 'long', day: 'numeric', month: 'short' };
-      return prefix + d.toLocaleDateString('en-GB', options).toUpperCase();
+      const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(d);
+      const dayMonth = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit' }).format(d).replace(/\//g, '.');
+      
+      return (prefix + weekday + ' ' + dayMonth).toUpperCase();
     }
 
     function renderWeather(weather) {
