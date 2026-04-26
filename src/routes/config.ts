@@ -9,7 +9,6 @@ const CONFIG_PATH = join(__dirname, '..', '..', 'config.json');
 
 const DEFAULT_CONFIG: AppConfig = {
   calendarIds: [],
-  enabledStudents: [],
   widgetOrder: ['weather', 'kids', 'calendar'],
   accentColor: '#38BDF8'
 };

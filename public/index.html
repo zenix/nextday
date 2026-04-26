@@ -477,14 +477,6 @@
       </div>
 
       <div class="settings-group">
-        <label class="settings-label">Students Visibility</label>
-        <div id="studentList">
-          <!-- Populated from /api/meta -->
-          <div class="empty-state">Loading students...</div>
-        </div>
-      </div>
-
-      <div class="settings-group">
         <label class="settings-label">Layout Order</label>
         <div id="widgetList">
           <!-- draggable items -->
@@ -619,21 +611,6 @@
     function populateSettings() {
       document.getElementById('calendarInput').value = config.calendarIds.join(', ');
       
-      const studentList = document.getElementById('studentList');
-      if (meta.students.length === 0) {
-        studentList.innerHTML = `<div class="empty-state">${config.wilma?.username ? 'Wait for student list...' : 'Configure Wilma first.'}</div>`;
-      } else {
-        studentList.innerHTML = meta.students.map(name => `
-          <div class="student-item">
-            <span>${name}</span>
-            <label class="switch">
-              <input type="checkbox" class="student-toggle" value="${name}" ${config.enabledStudents.includes(name) ? 'checked' : ''}>
-              <span class="slider"></span>
-            </label>
-          </div>
-        `).join('');
-      }
-
       // Populate credentials
       document.getElementById('wilmaBaseUrl').value = config.wilma?.baseUrl || '';
       document.getElementById('wilmaUser').value = config.wilma?.username || '';
@@ -687,11 +664,6 @@
       const calendarInput = document.getElementById('calendarInput').value;
       config.calendarIds = calendarInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
       
-      const studentToggles = document.querySelectorAll('.student-toggle');
-      config.enabledStudents = Array.from(studentToggles)
-        .filter(t => t.checked)
-        .map(t => t.value);
-
       // Collect credentials
       config.wilma = {
         baseUrl: document.getElementById('wilmaBaseUrl').value || undefined,
@@ -900,7 +872,6 @@
       const params = new URLSearchParams();
       params.set('date', currentDate);
       if (config.calendarIds.length) params.set('calendarIds', config.calendarIds.join(','));
-      if (config.enabledStudents.length) params.set('students', config.enabledStudents.join(','));
 
       try {
         const res = await fetch(`/api/day?${params.toString()}`);

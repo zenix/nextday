@@ -56,7 +56,6 @@ export interface DayResponse {
 
 export interface AppConfig {
   calendarIds: string[];
-  enabledStudents: string[];
   widgetOrder: string[];
   accentColor: string;
   // Credentials (optional overrides for .env)

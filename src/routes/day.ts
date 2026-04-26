@@ -33,11 +33,10 @@ export async function dayRoute(app: FastifyInstance, getWilmaConfig: () => Wilma
     }
 
     const calendarIds = query.calendarIds ? query.calendarIds.split(',') : undefined;
-    const students = query.students ? query.students.split(',') : undefined;
 
     const weatherPromise = Promise.race([fetchWeather(date), timeout(10_000)]);
     const wilmaPromise = wilmaConfig
-      ? Promise.race([fetchWilma(wilmaConfig, date, students), timeout(30_000)])
+      ? Promise.race([fetchWilma(wilmaConfig, date), timeout(30_000)])
       : Promise.resolve({ error: true as const, message: 'Wilma not configured' });
     const calendarPromise = Promise.race([fetchCalendar(date, calendarIds), timeout(10_000)]);
 
