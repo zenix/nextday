@@ -12,3 +12,4 @@ wilma_overview_*.json
 src/test-*.ts
 
 config.json
+.idea
