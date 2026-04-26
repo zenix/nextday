@@ -25,73 +25,77 @@ export async function fetchCalendar(date: string): Promise<CalendarEvent[] | Sou
   try {
     const calendar = getCalendarAPI();
 
-    // The provided date is in Europe/Helsinki. We need to construct the ISO string with correct timezone offset.
-    // Helsinki is +02:00 in winter, +03:00 in summer.
-    // The easiest way is to let Date parse it as Helsinki time by formatting it locally, 
-    // or manually query the offset. Node 22 has great Intl support.
-    
-    // A robust way to construct the timeMin/timeMax for a specific timezone is to format parts and construct a local date,
-    // but the Google Calendar API accepts RFC3339 timestamps. If we specify a time zone suffix, it will parse it correctly.
-    // Let's determine the offset for the given date in Helsinki.
-    
     const d = new Date(`${date}T12:00:00Z`); // use noon UTC as a base to avoid edge cases
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Europe/Helsinki',
       timeZoneName: 'longOffset',
     });
-    // Formats like "4/27/2026, GMT+3"
     const parts = formatter.formatToParts(d);
     let offset = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT+03:00';
     offset = offset.replace('GMT', '');
     if (offset === '') offset = '+00:00';
     
-    // Now we have something like +03:00 or +02:00
     const timeMin = `${date}T00:00:00${offset}`;
     const timeMax = `${date}T23:59:59${offset}`;
 
-    const res = await calendar.events.list({
-      calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
-      timeMin,
-      timeMax,
-      singleEvents: true,
-      orderBy: 'startTime',
-    });
+    const calendarIds = (process.env.GOOGLE_CALENDAR_ID || 'primary').split(',').map(id => id.trim());
+    const allEvents: CalendarEvent[] = [];
 
-    const events: CalendarEvent[] = [];
-    const items = res.data.items || [];
+    for (const calendarId of calendarIds) {
+      try {
+        const res = await calendar.events.list({
+          calendarId,
+          timeMin,
+          timeMax,
+          singleEvents: true,
+          orderBy: 'startTime',
+        });
 
-    for (const item of items) {
-      if (item.start?.date) {
-        // All day event
-        events.push({
-          title: item.summary || 'Untitled Event',
-          time: 'All day',
-          durationMinutes: null,
-        });
-      } else if (item.start?.dateTime && item.end?.dateTime) {
-        // Timed event
-        const startDate = new Date(item.start.dateTime);
-        const endDate = new Date(item.end.dateTime);
-        
-        // Format start time in Helsinki
-        const timeFormatter = new Intl.DateTimeFormat('sv-SE', {
-          timeZone: 'Europe/Helsinki',
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        const timeStr = timeFormatter.format(startDate);
-        
-        const durationMinutes = Math.round((endDate.getTime() - startDate.getTime()) / 60000);
-        
-        events.push({
-          title: item.summary || 'Untitled Event',
-          time: timeStr,
-          durationMinutes,
-        });
+        const items = res.data.items || [];
+
+        for (const item of items) {
+          if (item.start?.date) {
+            // All day event
+            allEvents.push({
+              title: item.summary || 'Untitled Event',
+              time: 'All day',
+              durationMinutes: null,
+            });
+          } else if (item.start?.dateTime && item.end?.dateTime) {
+            // Timed event
+            const startDate = new Date(item.start.dateTime);
+            const endDate = new Date(item.end.dateTime);
+            
+            const timeFormatter = new Intl.DateTimeFormat('sv-SE', {
+              timeZone: 'Europe/Helsinki',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            const timeStr = timeFormatter.format(startDate);
+            
+            const durationMinutes = Math.round((endDate.getTime() - startDate.getTime()) / 60000);
+            
+            allEvents.push({
+              title: item.summary || 'Untitled Event',
+              time: timeStr,
+              durationMinutes,
+            });
+          }
+        }
+      } catch (e) {
+        console.error(`Failed to fetch calendar ${calendarId}:`, e);
+        // Continue to next calendar even if one fails
       }
     }
 
-    return events;
+    // Sort combined events by time
+    allEvents.sort((a, b) => {
+      if (a.time === 'All day') return -1;
+      if (b.time === 'All day') return 1;
+      return a.time.localeCompare(b.time);
+    });
+
+    return allEvents;
   } catch (error: any) {
     return { error: true, message: error.message || 'Failed to fetch Calendar data' };
   }
