@@ -1,10 +1,15 @@
 export interface WeatherData {
-  summary: string;        // Human-readable from WMO code
-  tempMax: number;        // °C
-  tempMin: number;        // °C
+  summary: string;
+  tempMax: number;
+  tempMin: number;
   precipitationMm: number;
   windKph: number;
-  wmoCode: number;        // Raw WMO weather code (for icon mapping in frontend)
+  wmoCode: number;
+  hourly: {
+    time: string; // "Morning", "Midday", "Evening"
+    temp: number;
+    wmoCode: number;
+  }[];
 }
 
 export interface CalendarEvent {

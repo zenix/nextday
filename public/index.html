@@ -150,6 +150,24 @@
       gap: 6px;
     }
 
+    .weather-hourly {
+      display: flex;
+      gap: 20px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--card-border);
+      justify-content: space-around;
+    }
+    .hourly-point {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .hourly-time { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+    .hourly-icon { font-size: 1.25rem; }
+    .hourly-temp { font-weight: 600; font-size: 0.95rem; }
+
     /* Section Titles */
     h2 {
       font-size: 0.9rem;
@@ -730,20 +748,36 @@
       if (!weather || weather.error) {
         return `<div class="card"><div class="error-inline">☁️ Weather unavailable: ${weather?.message || 'Unknown error'}</div></div>`;
       }
+
+      const hourlyHtml = weather.hourly ? `
+        <div class="weather-hourly">
+          ${weather.hourly.map(h => `
+            <div class="hourly-point">
+              <span class="hourly-time">${h.time}</span>
+              <span class="hourly-icon">${weatherIcon(h.wmoCode)}</span>
+              <span class="hourly-temp">${Math.round(h.temp)}°</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+
       return `
-        <div class="card weather">
-          <div class="weather-main">
-            <div class="weather-icon">${weatherIcon(weather.wmoCode)}</div>
-            <div class="weather-temps">
-              <span class="temp-high">${weather.tempMax}°</span>
-              <span class="temp-low">${weather.tempMin}°</span>
-              <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Pirkkala</span>
+        <div class="card weather-card">
+          <div class="weather">
+            <div class="weather-main">
+              <div class="weather-icon">${weatherIcon(weather.wmoCode)}</div>
+              <div class="weather-temps">
+                <span class="temp-high">${weather.tempMax}°</span>
+                <span class="temp-low">${weather.tempMin}°</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Pirkkala</span>
+              </div>
+            </div>
+            <div class="weather-details">
+              <div class="w-detail">💧 ${weather.precipitationMm}mm</div>
+              <div class="w-detail">💨 ${weather.windKph} km/h</div>
             </div>
           </div>
-          <div class="weather-details">
-            <div class="w-detail">💧 ${weather.precipitationMm}mm</div>
-            <div class="w-detail">💨 ${weather.windKph} km/h</div>
-          </div>
+          ${hourlyHtml}
         </div>
       `;
     }
