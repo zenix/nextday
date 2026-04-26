@@ -1,0 +1,12 @@
+# Secrets
+.env
+
+# Dependencies & build output
+node_modules/
+dist/
+
+# Debug / scratch files generated during development
+wilma_homepage.html
+wilma_roles.html
+wilma_overview_*.json
+src/test-*.ts

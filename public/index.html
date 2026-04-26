@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nextday</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0F172A">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg-color: #0F172A;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --accent: #38BDF8;
+      --accent-hover: #0EA5E9;
+      --danger: #EF4444;
+      --success: #10B981;
+      --glass-blur: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-color);
+      background-image: radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.15), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Glassmorphic Card */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px -10px rgba(0,0,0,0.6);
+    }
+
+    /* Navigation Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.02);
+    }
+    .nav-btn:active {
+      transform: scale(0.98);
+    }
+
+    h1.date-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      flex-grow: 1;
+      background: -webkit-linear-gradient(45deg, #38BDF8, #8B5CF6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Weather Widget */
+    .weather {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+    }
+    .weather-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .weather-icon {
+      font-size: 2.5rem;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    }
+    .weather-temps {
+      display: flex;
+      flex-direction: column;
+    }
+    .temp-high { font-size: 1.5rem; font-weight: 700; }
+    .temp-low { color: var(--text-muted); font-size: 0.9rem; }
+    .weather-details {
+      display: flex;
+      gap: 16px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .w-detail {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Section Titles */
+    h2 {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h2::after {
+      content: '';
+      flex-grow: 1;
+      height: 1px;
+      background: var(--card-border);
+    }
+
+    /* Lists */
+    ul { list-style: none; }
+    li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    li:last-child { border-bottom: none; padding-bottom: 0; }
+    
+    /* Calendar */
+    .event {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .event-time {
+      font-weight: 600;
+      color: var(--accent);
+      width: 60px;
+      flex-shrink: 0;
+    }
+    .event-details { flex-grow: 1; }
+    .event-title { font-weight: 500; }
+    .event-duration { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;}
+
+    /* Kids Section */
+    .kid-block {
+      margin-bottom: 24px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .kid-block:last-child { margin-bottom: 0; }
+    .kid-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #A78BFA;
+      margin-bottom: 12px;
+    }
+    
+    .data-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+    .data-label {
+      width: 80px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .data-content { flex-grow: 1; }
+    .data-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .subject-tag {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    /* Utilities */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 0;
+      color: var(--text-muted);
+      gap: 16px;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-inline {
+      color: var(--danger);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 8px;
+    }
+    .error-full {
+      text-align: center;
+      padding: 40px;
+    }
+    .btn-retry {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 16px;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 0.9rem;
+      padding: 8px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app">
+    <header>
+      <button class="nav-btn" onclick="navigate(-1)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h1 class="date-title" id="dateTitle">LOADING...</h1>
+      <button class="nav-btn" onclick="navigate(1)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </header>
+
+    <div id="content">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+  <script>
+    let currentDate = readDateFromHash() || getTomorrow();
+    let refreshInterval = null;
+
+    function readDateFromHash() {
+      const h = location.hash.slice(1);
+      return /^\d{4}-\d{2}-\d{2}$/.test(h) ? h : null;
+    }
+
+    function getTomorrow() {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function getToday() {
+      const d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+
+    function navigate(offset) {
+      const d = new Date(currentDate + 'T12:00:00');
+      d.setDate(d.getDate() + offset);
+      currentDate = d.toISOString().slice(0, 10);
+      location.hash = currentDate;
+    }
+
+    window.addEventListener('hashchange', () => {
+      currentDate = readDateFromHash() || getTomorrow();
+      loadDay();
+    });
+
+    function weatherIcon(wmoCode) {
+      if (wmoCode === 0) return '☀️';
+      if (wmoCode <= 2) return '🌤';
+      if (wmoCode === 3) return '☁️';
+      if (wmoCode <= 48) return '🌫';
+      if (wmoCode <= 67) return '🌧';
+      if (wmoCode <= 77) return '❄️';
+      if (wmoCode <= 82) return '🌦';
+      if (wmoCode <= 86) return '🌨';
+      return '⛈';
+    }
+
+    function formatDateTitle(dateStr) {
+      const d = new Date(dateStr + 'T12:00:00');
+      const today = getToday();
+      const tomorrow = getTomorrow();
+      
+      let prefix = '';
+      if (dateStr === today) prefix = 'TODAY • ';
+      else if (dateStr === tomorrow) prefix = 'TOMORROW • ';
+
+      const options = { weekday: 'long', day: 'numeric', month: 'short' };
+      return prefix + d.toLocaleDateString('en-GB', options).toUpperCase();
+    }
+
+    function renderWeather(weather) {
+      if (!weather || weather.error) {
+        return `<div class="card"><div class="error-inline">☁️ Weather unavailable: ${weather?.message || 'Unknown error'}</div></div>`;
+      }
+      return `
+        <div class="card weather">
+          <div class="weather-main">
+            <div class="weather-icon">${weatherIcon(weather.wmoCode)}</div>
+            <div class="weather-temps">
+              <span class="temp-high">${weather.tempMax}°</span>
+              <span class="temp-low">${weather.tempMin}°</span>
+            </div>
+          </div>
+          <div class="weather-details">
+            <div class="w-detail">💧 ${weather.precipitationMm}mm</div>
+            <div class="w-detail">💨 ${weather.windKph} km/h</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCalendar(calendar) {
+      if (!calendar || calendar.error) {
+        return `<div class="card"><h2>YOUR DAY</h2><div class="error-inline">📅 Calendar unavailable: ${calendar?.message || 'Unknown error'}</div></div>`;
+      }
+      
+      let eventsHtml = '';
+      if (calendar.length === 0) {
+        eventsHtml = '<div class="empty-state">No events scheduled.</div>';
+      } else {
+        eventsHtml = `<ul>${calendar.map(ev => `
+          <li>
+            <div class="event">
+              <div class="event-time">${ev.time}</div>
+              <div class="event-details">
+                <div class="event-title">${ev.title}</div>
+                ${ev.durationMinutes ? `<div class="event-duration">${ev.durationMinutes} min</div>` : ''}
+              </div>
+            </div>
+          </li>
+        `).join('')}</ul>`;
+      }
+
+      return `
+        <div class="card">
+          <h2>YOUR DAY</h2>
+          ${eventsHtml}
+        </div>
+      `;
+    }
+
+    function renderKids(kids) {
+      if (!kids || kids.error) {
+        return `<div class="card"><h2>WILMA</h2><div class="error-inline">🎒 Wilma unavailable: ${kids?.message || 'Unknown error'}</div></div>`;
+      }
+
+      if (kids.length === 0) {
+        return '';
+      }
+
+      const kidsHtml = kids.map(kid => {
+        const scheduleHtml = kid.schedule.length ? kid.schedule.map(s => `<span class="subject-tag">${s.time} ${s.subject}</span>`).join(' ') : '<span class="empty-state">None</span>';
+        const hwHtml = kid.homework.length ? kid.homework.map(h => `<div class="data-item"><span><b>${h.subject}</b> — ${h.description}</span></div>`).join('') : '<span class="empty-state">None pending</span>';
+        const examsHtml = kid.exams.length ? kid.exams.map(e => `<div class="data-item"><span><b>${e.subject}</b> on ${e.date}</span></div>`).join('') : '<span class="empty-state">No upcoming exams</span>';
+
+        return `
+          <div class="kid-block">
+            <div class="kid-name">${kid.name.toUpperCase()}</div>
+            <div class="data-row">
+              <div class="data-label">Schedule</div>
+              <div class="data-content" style="display:flex; flex-wrap:wrap; gap:6px;">${scheduleHtml}</div>
+            </div>
+            <div class="data-row">
+              <div class="data-label">Homework</div>
+              <div class="data-content">${hwHtml}</div>
+            </div>
+            <div class="data-row">
+              <div class="data-label">Exams</div>
+              <div class="data-content">${examsHtml}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="card">
+          <h2>WILMA</h2>
+          ${kidsHtml}
+        </div>
+      `;
+    }
+
+    function render(data) {
+      document.getElementById('dateTitle').innerText = formatDateTitle(data.date);
+      const content = document.getElementById('content');
+      
+      content.innerHTML = `
+        ${renderWeather(data.weather)}
+        ${renderCalendar(data.calendar)}
+        ${renderKids(data.kids)}
+      `;
+
+      // Trigger reflow for animation
+      content.style.animation = 'none';
+      content.offsetHeight;
+      content.style.animation = 'fadeIn 0.3s ease-out';
+    }
+
+    function showLoading() {
+      document.getElementById('content').innerHTML = `
+        <div class="card loading">
+          <div class="spinner"></div>
+          <div>Fetching the day...</div>
+        </div>
+      `;
+    }
+
+    function showError(msg) {
+      document.getElementById('content').innerHTML = `
+        <div class="card error-full">
+          <div style="font-size: 2rem; margin-bottom: 10px;">⚠️</div>
+          <div>${msg}</div>
+          <button class="btn-retry" onclick="loadDay()">Retry</button>
+        </div>
+      `;
+    }
+
+    async function loadDay() {
+      showLoading();
+      document.getElementById('dateTitle').innerText = formatDateTitle(currentDate);
+      try {
+        const res = await fetch(`/api/day?date=${currentDate}`);
+        if (!res.ok) throw new Error('Network response was not ok');
+        const data = await res.json();
+        render(data);
+      } catch (e) {
+        showError('Failed to load data. Please check your connection or server logs.');
+      }
+
+      setupAutoRefresh();
+    }
+
+    function setupAutoRefresh() {
+      if (refreshInterval) clearInterval(refreshInterval);
+      
+      const today = getToday();
+      const tomorrow = getTomorrow();
+      
+      if (currentDate === today || currentDate === tomorrow) {
+        // Refresh every 30 minutes
+        refreshInterval = setInterval(loadDay, 30 * 60 * 1000);
+      }
+    }
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => {
+          console.error('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+
+    // Initial load
+    location.hash = currentDate;
+    loadDay();
+  </script>
+</body>
+</html>
