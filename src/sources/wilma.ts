@@ -6,11 +6,16 @@ export interface WilmaConfig {
   students: StudentInfo[];
 }
 
-export async function fetchWilma(config: WilmaConfig, date: string): Promise<KidData[] | SourceError> {
+export async function fetchWilma(config: WilmaConfig, date: string, studentFilter?: string[]): Promise<KidData[] | SourceError> {
   try {
     const kidsData: KidData[] = [];
 
     const { profile, students } = config;
+    
+    // Apply filter if provided
+    const targetStudents = studentFilter && studentFilter.length > 0
+      ? students.filter(s => studentFilter.includes(s.name))
+      : students;
 
     if (students.length === 0) {
       // Fallback: direct account — login without student number
@@ -41,7 +46,7 @@ export async function fetchWilma(config: WilmaConfig, date: string): Promise<Kid
       return kidsData;
     }
 
-    for (const student of students) {
+    for (const student of targetStudents) {
       const studentProfile = { ...profile, studentNumber: student.studentNumber };
       const client = await WilmaClient.login(studentProfile);
       const overview = await client.overview.get();

@@ -10,3 +10,5 @@ wilma_homepage.html
 wilma_roles.html
 wilma_overview_*.json
 src/test-*.ts
+
+config.json

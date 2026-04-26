@@ -1,29 +1,32 @@
 import { google } from 'googleapis';
 import { CalendarEvent, SourceError } from '../types.js';
 
+import { getConfig } from '../routes/config.js';
+
 let oauth2Client: any = null;
 let calendarAPI: any = null;
 
-function getCalendarAPI() {
+async function getCalendarAPI() {
   if (calendarAPI) return calendarAPI;
 
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REFRESH_TOKEN) {
-    throw new Error('Google Calendar credentials missing from .env');
+  const config = await getConfig();
+  const clientId = config.google?.clientId || process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = config.google?.clientSecret || process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = config.google?.refreshToken || process.env.GOOGLE_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error('Google Calendar credentials missing. Please set them in the UI or .env');
   }
 
-  oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-  );
-  
-  oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+  oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
   calendarAPI = google.calendar({ version: 'v3', auth: oauth2Client });
   return calendarAPI;
 }
 
-export async function fetchCalendar(date: string): Promise<CalendarEvent[] | SourceError> {
+export async function fetchCalendar(date: string, calendarIdsOverride?: string[]): Promise<CalendarEvent[] | SourceError> {
   try {
-    const calendar = getCalendarAPI();
+    const calendar = await getCalendarAPI();
 
     const d = new Date(`${date}T12:00:00Z`); // use noon UTC as a base to avoid edge cases
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -38,7 +41,7 @@ export async function fetchCalendar(date: string): Promise<CalendarEvent[] | Sou
     const timeMin = `${date}T00:00:00${offset}`;
     const timeMax = `${date}T23:59:59${offset}`;
 
-    const calendarIds = (process.env.GOOGLE_CALENDAR_ID || 'primary').split(',').map(id => id.trim());
+    const calendarIds = calendarIdsOverride || (process.env.GOOGLE_CALENDAR_ID || 'primary').split(',').map(id => id.trim());
     const allEvents: CalendarEvent[] = [];
 
     for (const calendarId of calendarIds) {

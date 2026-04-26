@@ -28,8 +28,9 @@ export async function fetchWeather(date: string): Promise<WeatherData | SourceEr
   const today = getTodayHelsinki();
   const isPast = date < today;
 
-  const lat = 61.47;
-  const lon = 23.65;
+  // Coordinates for Pirkkala, Finland
+  const lat = 61.467;
+  const lon = 23.650;
   const dailyParams = 'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,weathercode';
   const tz = 'Europe%2FHelsinki';
 

@@ -20,8 +20,9 @@ function getTomorrowHelsinki(): string {
   return tomorrow.toISOString().slice(0, 10);
 }
 
-export async function dayRoute(app: FastifyInstance, wilmaConfig: WilmaConfig | null) {
+export async function dayRoute(app: FastifyInstance, getWilmaConfig: () => WilmaConfig | null) {
   app.get('/api/day', async (request, reply) => {
+    const wilmaConfig = getWilmaConfig();
     const query = request.query as any;
     let date = query.date;
 
@@ -31,11 +32,14 @@ export async function dayRoute(app: FastifyInstance, wilmaConfig: WilmaConfig | 
       return reply.code(400).send({ error: 'Invalid date format. Use YYYY-MM-DD' });
     }
 
+    const calendarIds = query.calendarIds ? query.calendarIds.split(',') : undefined;
+    const students = query.students ? query.students.split(',') : undefined;
+
     const weatherPromise = Promise.race([fetchWeather(date), timeout(10_000)]);
     const wilmaPromise = wilmaConfig
-      ? Promise.race([fetchWilma(wilmaConfig, date), timeout(30_000)])
+      ? Promise.race([fetchWilma(wilmaConfig, date, students), timeout(30_000)])
       : Promise.resolve({ error: true as const, message: 'Wilma not configured' });
-    const calendarPromise = Promise.race([fetchCalendar(date), timeout(10_000)]);
+    const calendarPromise = Promise.race([fetchCalendar(date, calendarIds), timeout(10_000)]);
 
     const [weatherResult, wilmaResult, calendarResult] = await Promise.allSettled([
       weatherPromise,
