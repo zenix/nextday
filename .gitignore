@@ -1,6 +1,3 @@
-# Secrets
-.env
-
 # Dependencies & build output
 node_modules/
 dist/
@@ -13,3 +10,5 @@ src/test-*.ts
 
 config.json
 .idea
+
+calendar-cache.json

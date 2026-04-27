@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { join, dirname } from 'path';
@@ -8,6 +7,7 @@ import { configRoute } from './routes/config.js';
 import { metaRoute } from './routes/meta.js';
 import { WilmaClient } from '@wilm-ai/wilma-client';
 import { WilmaConfig } from './sources/wilma.js';
+import { loadCacheFromDisk, refreshCalendarCache } from './sources/calendar.js';
 
 import { getConfig } from './routes/config.js';
 
@@ -17,9 +17,9 @@ let wilmaConfig: WilmaConfig | null = null;
 
 async function refreshWilmaConfig(log: any) {
   const config = await getConfig();
-  const baseUrl = config.wilma?.baseUrl || process.env.WILMA_BASE_URL;
-  const username = config.wilma?.username || process.env.WILMA_USERNAME;
-  const password = config.wilma?.password || process.env.WILMA_PASSWORD;
+  const baseUrl = config.wilma?.baseUrl;
+  const username = config.wilma?.username;
+  const password = config.wilma?.password;
 
   if (baseUrl && username && password) {
     log.info('Fetching Wilma student list...');
@@ -47,6 +47,9 @@ async function startServer() {
   });
 
   await refreshWilmaConfig(app.log);
+  await loadCacheFromDisk(app.log);
+  refreshCalendarCache(app.log).catch(err => app.log.error('Initial calendar refresh failed: ' + err));
+  setInterval(() => refreshCalendarCache(app.log), 30 * 60 * 1000);
 
   app.register(configRoute);
   
@@ -54,6 +57,7 @@ async function startServer() {
   app.addHook('onResponse', async (request, reply) => {
     if (request.method === 'POST' && request.url === '/api/config' && reply.statusCode === 200) {
       await refreshWilmaConfig(app.log);
+      refreshCalendarCache(app.log).catch(err => app.log.error('Calendar refresh error: ' + err));
     }
   });
 
@@ -70,7 +74,7 @@ async function startServer() {
   });
 
   try {
-    const port = Number(process.env.PORT) || 3000;
+    const port = 3000;
     const host = '0.0.0.0';
     await app.listen({ port, host });
     console.log(`\n🚀 Nextday is running natively!`);

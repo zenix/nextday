@@ -55,18 +55,13 @@ export interface DayResponse {
 }
 
 export interface AppConfig {
-  calendarIds: string[];
+  port?: number;
+  calendars: Array<{ name: string; url: string }>;
   widgetOrder: string[];
   accentColor: string;
-  // Credentials (optional overrides for .env)
   wilma?: {
     baseUrl?: string;
     username?: string;
     password?: string;
-  };
-  google?: {
-    clientId?: string;
-    clientSecret?: string;
-    refreshToken?: string;
   };
 }

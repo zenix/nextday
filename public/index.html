@@ -469,12 +469,6 @@
         </button>
       </div>
 
-      <div class="settings-group">
-        <label class="settings-label">Calendars (emails, comma separated)</label>
-        <div class="input-group">
-          <input type="text" id="calendarInput" placeholder="primary, work@company.com">
-        </div>
-      </div>
 
       <div class="settings-group">
         <label class="settings-label">Layout Order</label>
@@ -495,7 +489,7 @@
       </div>
 
       <div class="settings-group">
-        <label class="settings-label">Global Credentials (Overrides .env)</label>
+        <label class="settings-label">Global Credentials</label>
         <div style="background:rgba(0,0,0,0.2); padding:16px; border-radius:16px; display:flex; flex-direction:column; gap:12px;">
           <div>
             <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Wilma Base URL</label>
@@ -509,20 +503,13 @@
             <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Wilma Password</label>
             <input type="password" id="wilmaPass" style="background:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:12px; padding:12px; color:#fff; width:100%;">
           </div>
-          <hr style="border:0; border-top:1px solid var(--card-border); margin:8px 0;">
-          <div>
-            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Google Client ID</label>
-            <input type="text" id="googleId">
-          </div>
-          <div>
-            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Google Client Secret</label>
-            <input type="text" id="googleSecret">
-          </div>
-          <div>
-            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Google Refresh Token</label>
-            <input type="text" id="googleToken">
-          </div>
         </div>
+      </div>
+
+      <div class="settings-group">
+        <label class="settings-label">Calendars (Google iCal URLs)</label>
+        <div id="calendarList" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <button type="button" class="btn-primary" style="margin-top:8px;" onclick="addCalendar()">+ Add calendar</button>
       </div>
 
       <div class="save-bar">
@@ -535,7 +522,7 @@
     let currentDate = readDateFromHash() || getTomorrow();
     let refreshInterval = null;
     let config = {
-      calendarIds: [],
+      calendars: [],
       enabledStudents: [],
       widgetOrder: ['weather', 'kids', 'calendar'],
       accentColor: '#38BDF8'
@@ -600,6 +587,39 @@
       }
     }
 
+
+
+    function renderCalendarList() {
+      const list = document.getElementById('calendarList');
+      list.innerHTML = (config.calendars || []).map((c, i) => `
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" placeholder="Name" value="${(c.name || '').replace(/"/g, '&quot;')}"
+                 data-idx="${i}" data-field="name" style="flex:0 0 30%;">
+          <input type="text" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics"
+                 value="${(c.url || '').replace(/"/g, '&quot;')}"
+                 data-idx="${i}" data-field="url" style="flex:1;">
+          <button type="button" class="order-btn" onclick="removeCalendar(${i})">✕</button>
+        </div>
+      `).join('');
+      list.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', e => {
+          const idx = Number(e.target.dataset.idx);
+          config.calendars[idx][e.target.dataset.field] = e.target.value;
+        });
+      });
+    }
+
+    function addCalendar() {
+      if (!Array.isArray(config.calendars)) config.calendars = [];
+      config.calendars.push({ name: '', url: '' });
+      renderCalendarList();
+    }
+
+    function removeCalendar(idx) {
+      config.calendars.splice(idx, 1);
+      renderCalendarList();
+    }
+
     function toggleSettings(show) {
       const modal = document.getElementById('settingsModal');
       modal.style.display = show ? 'flex' : 'none';
@@ -609,15 +629,13 @@
     }
 
     function populateSettings() {
-      document.getElementById('calendarInput').value = config.calendarIds.join(', ');
+      if (!Array.isArray(config.calendars)) config.calendars = [];
+      renderCalendarList();
       
       // Populate credentials
       document.getElementById('wilmaBaseUrl').value = config.wilma?.baseUrl || '';
       document.getElementById('wilmaUser').value = config.wilma?.username || '';
       document.getElementById('wilmaPass').value = config.wilma?.password || '';
-      document.getElementById('googleId').value = config.google?.clientId || '';
-      document.getElementById('googleSecret').value = config.google?.clientSecret || '';
-      document.getElementById('googleToken').value = config.google?.refreshToken || '';
 
       renderWidgetOrder();
       
@@ -661,19 +679,11 @@
     }
 
     async function saveSettings() {
-      const calendarInput = document.getElementById('calendarInput').value;
-      config.calendarIds = calendarInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
-      
       // Collect credentials
       config.wilma = {
         baseUrl: document.getElementById('wilmaBaseUrl').value || undefined,
         username: document.getElementById('wilmaUser').value || undefined,
         password: document.getElementById('wilmaPass').value || undefined
-      };
-      config.google = {
-        clientId: document.getElementById('googleId').value || undefined,
-        clientSecret: document.getElementById('googleSecret').value || undefined,
-        refreshToken: document.getElementById('googleToken').value || undefined
       };
 
       try {
@@ -871,8 +881,6 @@
       
       const params = new URLSearchParams();
       params.set('date', currentDate);
-      if (config.calendarIds.length) params.set('calendarIds', config.calendarIds.join(','));
-
       try {
         const res = await fetch(`/api/day?${params.toString()}`);
         if (!res.ok) throw new Error('Network response was not ok');

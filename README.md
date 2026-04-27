@@ -7,7 +7,7 @@ A modern, glassmorphic dashboard for cross-platform use (Windows, Linux, Android
 - **PWA Architecture**: Installable on Android, Windows, and Linux as a native-like app.
 - **Data Aggregation**:
   - **Wilma**: Fetches student schedules, homework, and exams (supports parent accounts with multiple students).
-  - **Google Calendar**: Real-time event synchronization.
+  - **Google Calendar**: Real-time event synchronization via iCal feeds.
   - **Weather**: Localized weather data via Open-Meteo.
 - **Glassmorphic UI**: Vibrant, responsive design with smooth animations and dark mode.
 - **Self-Refreshing**: Dashboard automatically stays up to date.
@@ -16,7 +16,7 @@ A modern, glassmorphic dashboard for cross-platform use (Windows, Linux, Android
 
 - **Backend**: Fastify, TypeScript, Node.js.
 - **Frontend**: Vanilla HTML/JS/CSS (No build step for frontend assets).
-- **Libraries**: `@wilm-ai/wilma-client`, `googleapis`, `tough-cookie`.
+- **Libraries**: `@wilm-ai/wilma-client`, `node-ical`.
 
 ## Setup
 
@@ -27,19 +27,11 @@ A modern, glassmorphic dashboard for cross-platform use (Windows, Linux, Android
    npm install
    ```
 
-2. **Environment Variables**:
-   Copy `.env.example` to `.env` and fill in your credentials.
-   ```bash
-   cp .env.example .env
-   ```
+2. **Google Calendar Setup**:
+   In Google Calendar → settings for the calendar you want → 'Integrate calendar' → copy **Secret address in iCal format**. Open the app's Settings, click '+ Add calendar', paste the URL, give it a name, Save. Repeat for each calendar.
+   *Note: Anyone with this URL can read the calendar — keep it private.*
 
-3. **Google Calendar Setup**:
-   Run the helper script to generate your `GOOGLE_REFRESH_TOKEN`:
-   ```bash
-   npx tsx scripts/get-google-token.ts
-   ```
-
-4. **Run**:
+3. **Run**:
    ```bash
    npm run dev
    ```

@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const CONFIG_PATH = join(__dirname, '..', '..', 'config.json');
 
 const DEFAULT_CONFIG: AppConfig = {
-  calendarIds: [],
+  calendars: [],
   widgetOrder: ['weather', 'kids', 'calendar'],
   accentColor: '#38BDF8'
 };
@@ -35,7 +35,7 @@ export async function configRoute(app: FastifyInstance) {
     const config = request.body as AppConfig;
     
     // Basic validation
-    if (!Array.isArray(config.calendarIds) || !Array.isArray(config.widgetOrder)) {
+    if (!Array.isArray(config.calendars) || !Array.isArray(config.widgetOrder)) {
       return reply.code(400).send({ error: 'Invalid config format' });
     }
 
