@@ -12,3 +12,4 @@ config.json
 .idea
 
 calendar-cache.json
+holidays-cache.json
