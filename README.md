@@ -6,9 +6,10 @@ A modern, glassmorphic dashboard for cross-platform use (Windows, Linux, Android
 
 - **PWA Architecture**: Installable on Android, Windows, and Linux as a native-like app.
 - **Data Aggregation**:
-  - **Wilma**: Fetches student schedules, homework, and exams (supports parent accounts with multiple students).
+  - **Wilma**: Fetches student schedules, homework (with due dates), and exams (supports parent accounts with multiple students).
   - **Google Calendar**: Real-time event synchronization via iCal feeds.
   - **Weather**: Localized weather data via Open-Meteo.
+  - **Finnish Public Holidays**: Highlighted automatically via Nager.Date API (cached for 4 years).
 - **Glassmorphic UI**: Vibrant, responsive design with smooth animations and dark mode.
 - **Self-Refreshing**: Dashboard automatically stays up to date.
 

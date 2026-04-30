@@ -2,7 +2,7 @@
 
 ## What this repo is
 
-A local-server PWA dashboard (Fastify + TypeScript, Node.js ESM). No external build step for the frontend. Designed to run on a Raspberry Pi or Android tablet. Shows tomorrow's calendar, weather, and school schedule (Wilma) on a single screen. The server runs in the **Europe/Helsinki** timezone.
+A local-server PWA dashboard (Fastify + TypeScript, Node.js ESM). No external build step for the frontend. Designed to run on a Raspberry Pi or Android tablet. Shows tomorrow's calendar, weather, school schedule (Wilma), and Finnish public holidays on a single screen. The server runs in the **Europe/Helsinki** timezone.
 
 ## Repo layout
 
@@ -16,12 +16,14 @@ src/
     meta.ts             — GET /api/meta, returns student list and version
   sources/
     calendar.ts         — iCal fetch + in-memory/disk cache (calendar-cache.json)
+    holidays.ts         — Finnish public holidays via Nager.Date API (holidays-cache.json)
     weather.ts          — Open-Meteo integration (Pirkkala, Finland coordinates)
     wilma.ts            — Wilma student schedule, homework, exams
 public/                 — static frontend (HTML/JS/CSS), served as-is
 dist/                   — compiled output (tsc), not edited directly
 config.json             — runtime config: calendars, Wilma creds, UI prefs
 calendar-cache.json     — persisted iCal event cache (regenerated on each refresh)
+holidays-cache.json     — persisted Finnish public holidays cache (4 years, fetch-once)
 ```
 
 ## Development
@@ -39,7 +41,7 @@ No tests. Verify behaviour by running `npm run dev` and hitting the API routes o
 
 - **ESM throughout**: all imports use `.js` extensions (even for `.ts` sources). Do not add `.ts` extensions.
 - **No frontend build**: `public/` is vanilla HTML/JS/CSS. Do not introduce a bundler.
-- **Config persistence**: runtime config lives in `config.json` at the repo root; calendar cache in `calendar-cache.json`. Both are written at runtime — do not commit them.
+- **Config persistence**: runtime config lives in `config.json` at the repo root; calendar cache in `calendar-cache.json`; holiday cache in `holidays-cache.json`. All are written at runtime — do not commit them.
 - **Timezone**: all calendar times are stored as UTC ISO strings internally and displayed in `Europe/Helsinki`. Every date calculation must be timezone-explicit — never rely on `new Date(y, m, d, ...)` (local time); use `Date.UTC(...)` or `Intl.DateTimeFormat` with an explicit `timeZone` option instead.
 - **Source errors**: each data source returns `T | SourceError`. Never throw across the aggregation boundary in `day.ts`; return `{ error: true, message }` instead.
 - **Default date**: `/api/day` with no `?date=` param returns tomorrow in Helsinki time, calculated by `getTomorrowHelsinki()` in `day.ts`.
@@ -70,11 +72,15 @@ For all-day events, node-ical calls `new Date(y, m, d)` (local time) then the rr
 
 The cache is refreshed on server startup and every 30 minutes. Deleting `calendar-cache.json` forces a clean fetch on next startup. If a feed fails to refresh, the stale in-memory data is kept (not written to disk).
 
+## Holiday cache
+
+`holidays-cache.json` is a flat array of `PublicHoliday` objects (`{ date, name, localName }`). Fetched from `https://date.nager.at/api/v3/PublicHolidays/{year}/FI` for the current year and 3 following years. The fetch is skipped on subsequent startups if the current year is already in the cache. Deleting `holidays-cache.json` forces a re-fetch on next startup.
+
 ## API routes
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/day?date=YYYY-MM-DD` | Aggregate response: weather + calendar + kids. `date` defaults to tomorrow in Helsinki. |
+| GET | `/api/day?date=YYYY-MM-DD` | Aggregate response: weather + calendar + kids + holiday. `date` defaults to tomorrow in Helsinki. |
 | GET | `/api/config` | Read `config.json` |
 | POST | `/api/config` | Write `config.json`, then re-initialises Wilma and triggers calendar refresh |
 | GET | `/api/meta` | `{ students, version, status }` |
