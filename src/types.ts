@@ -42,6 +42,12 @@ export interface KidData {
   exams: ExamItem[];          // Upcoming exams from today forward
 }
 
+export interface PublicHoliday {
+  date: string;      // YYYY-MM-DD
+  name: string;      // English name
+  localName: string; // Finnish name
+}
+
 export interface SourceError {
   error: true;
   message: string;
@@ -52,6 +58,7 @@ export interface DayResponse {
   weather: WeatherData | SourceError;
   calendar: CalendarEvent[] | SourceError;
   kids: KidData[] | SourceError;
+  holiday: PublicHoliday | null;
 }
 
 export interface AppConfig {

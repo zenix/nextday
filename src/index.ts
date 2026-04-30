@@ -8,6 +8,7 @@ import { metaRoute } from './routes/meta.js';
 import { WilmaClient } from '@wilm-ai/wilma-client';
 import { WilmaConfig } from './sources/wilma.js';
 import { loadCacheFromDisk, refreshCalendarCache } from './sources/calendar.js';
+import { loadHolidayCacheFromDisk, refreshHolidayCache } from './sources/holidays.js';
 
 import { getConfig } from './routes/config.js';
 
@@ -48,7 +49,9 @@ async function startServer() {
 
   await refreshWilmaConfig(app.log);
   await loadCacheFromDisk(app.log);
+  await loadHolidayCacheFromDisk(app.log);
   refreshCalendarCache(app.log).catch(err => app.log.error('Initial calendar refresh failed: ' + err));
+  refreshHolidayCache(app.log).catch(err => app.log.error('Holiday fetch failed: ' + err));
   setInterval(() => refreshCalendarCache(app.log), 30 * 60 * 1000);
 
   app.register(configRoute);

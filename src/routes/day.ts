@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { fetchWeather } from '../sources/weather.js';
 import { fetchWilma, WilmaConfig } from '../sources/wilma.js';
 import { fetchCalendar } from '../sources/calendar.js';
+import { getHolidayForDate } from '../sources/holidays.js';
 
 function timeout(ms: number) {
   return new Promise<never>((_, reject) => {
@@ -45,6 +46,7 @@ export async function dayRoute(app: FastifyInstance, getWilmaConfig: () => Wilma
 
     return {
       date,
+      holiday: getHolidayForDate(date),
       weather: weatherResult.status === 'fulfilled' ? weatherResult.value : { error: true, message: String(weatherResult.reason) },
       kids: wilmaResult.status === 'fulfilled' ? wilmaResult.value : { error: true, message: String(wilmaResult.reason) },
       calendar: calendarResult.status === 'fulfilled' ? calendarResult.value : { error: true, message: String(calendarResult.reason) },
