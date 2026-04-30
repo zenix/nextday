@@ -807,7 +807,7 @@
 
       const kidsHtml = kids.map(kid => {
         const scheduleHtml = kid.schedule.length ? kid.schedule.map(s => `<span class="subject-tag">${s.time} ${s.subject}</span>`).join(' ') : '<span class="empty-state">None</span>';
-        const hwHtml = kid.homework.length ? kid.homework.map(h => `<div class="data-item"><span><b>${h.subject}</b> — ${h.description}</span></div>`).join('') : '<span class="empty-state">None pending</span>';
+        const hwHtml = kid.homework.length ? kid.homework.map(h => `<div class="data-item"><span><b>${h.subject}</b> — ${h.description}</span><span style="color:var(--text-muted);font-size:0.85rem;white-space:nowrap;">${h.dueDate}</span></div>`).join('') : '<span class="empty-state">None pending</span>';
         const examsHtml = kid.exams.length ? kid.exams.map(e => `<div class="data-item"><span><b>${e.subject}</b> on ${e.date}</span></div>`).join('') : '<span class="empty-state">No upcoming exams</span>';
 
         return `
