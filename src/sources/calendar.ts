@@ -33,6 +33,30 @@ function isAllDayEvent(ev: any): boolean {
   return ev.datetype === 'date' || (ev.start && (ev.start as any).dateOnly === true);
 }
 
+// rrule's internal dateInTimeZone() computes offset = tzTarget - tzServer.
+// When the server's local timezone equals the event's TZID (e.g. both are
+// Europe/Helsinki), the offset is zero and no conversion is applied —
+// occurrence dates come back with the local event time packed into the UTC
+// fields instead of real UTC. Detect this and convert properly.
+function correctRruleOccurrence(occ: Date, tzid: string): Date {
+  // Extract the local time that rrule stored in the UTC fields.
+  const y  = occ.getUTCFullYear();
+  const mo = String(occ.getUTCMonth() + 1).padStart(2, '0');
+  const d  = String(occ.getUTCDate()).padStart(2, '0');
+  const h  = String(occ.getUTCHours()).padStart(2, '0');
+  const mi = String(occ.getUTCMinutes()).padStart(2, '0');
+  const s  = String(occ.getUTCSeconds()).padStart(2, '0');
+  const localStr = `${y}-${mo}-${d}T${h}:${mi}:${s}`;
+  // naive treats the local-time string as UTC so we can do arithmetic on it.
+  const naive = new Date(localStr + 'Z');
+  // What does tzid display for this naive instant?
+  const inTZ = new Date(
+    naive.toLocaleString('sv-SE', { timeZone: tzid }).replace(' ', 'T') + 'Z'
+  );
+  // Shift naive back by the difference: result = local_time - tz_offset = proper UTC.
+  return new Date(naive.getTime() + (naive.getTime() - inTZ.getTime()));
+}
+
 function toISO(d: Date, allDay: boolean): string {
   if (allDay) {
     // Format as YYYY-MM-DD using UTC parts to avoid timezone shift
@@ -72,13 +96,21 @@ async function fetchAndParseFeed(name: string, url: string): Promise<NormalizedE
         ev.exdate ? Object.values(ev.exdate).map((d: any) => new Date(d).getTime()) : []
       );
 
-      for (const occ of occurrences) {
-        if (exdates.has(occ.getTime())) continue;
+      // rrule only corrects occurrence times when server TZ != event TZID.
+      // When they match, apply the correction ourselves.
+      const rruleTzid: string | undefined = (ev.rrule.options as any)?.tzid ?? undefined;
+      const serverTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const mustCorrect = !!(rruleTzid && rruleTzid === serverTZ);
 
-        const overrideKey = occ.toISOString().slice(0, 10);
+      for (const occ of occurrences) {
+        const occUTC = mustCorrect ? correctRruleOccurrence(occ, rruleTzid!) : occ;
+
+        if (exdates.has(occUTC.getTime())) continue;
+
+        const overrideKey = occUTC.toISOString().slice(0, 10);
         const override = ev.recurrences?.[overrideKey];
-        const start = override ? new Date(override.start) : occ;
-        const end   = override ? new Date(override.end)   : new Date(occ.getTime() + durationMs);
+        const start = override ? new Date(override.start) : occUTC;
+        const end   = override ? new Date(override.end)   : new Date(occUTC.getTime() + durationMs);
         const title = (override?.summary || ev.summary || 'Untitled Event') as string;
 
         events.push({ title, start: toISO(start, allDay), end: toISO(end, allDay), allDay });

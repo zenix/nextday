@@ -16,8 +16,7 @@ function getTomorrowHelsinki(): string {
     year: 'numeric', month: '2-digit', day: '2-digit'
   }).format(now);
   const [y, m, d] = helsinkiDate.split('-').map(Number);
-  const tomorrow = new Date(y, m - 1, d + 1);
-  return tomorrow.toISOString().slice(0, 10);
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
 }
 
 export async function dayRoute(app: FastifyInstance, getWilmaConfig: () => WilmaConfig | null) {
