@@ -59,10 +59,16 @@ function correctRruleOccurrence(occ: Date, tzid: string): Date {
 
 function toISO(d: Date, allDay: boolean): string {
   if (allDay) {
-    // Format as YYYY-MM-DD using UTC parts to avoid timezone shift
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
+    // node-ical builds date-only (VALUE=DATE) fields via `new Date(y, m, d)`
+    // (local-time construction). On this server (Europe/Helsinki, UTC+2/+3)
+    // that lands a few hours before midnight UTC, so reading UTC parts back
+    // rolls the date to the previous day. Local getters recover the correct
+    // day here, and also for rrule-expanded occurrences (which land on real
+    // UTC midnight) since adding the small positive Helsinki offset never
+    // crosses a day boundary.
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   }
   return d.toISOString();
@@ -219,8 +225,10 @@ export async function fetchCalendar(date: string): Promise<CalendarEvent[] | Sou
       const events = cache.get(cal.url) || [];
       for (const ev of events) {
         if (ev.allDay) {
-          // All-day: compare YYYY-MM-DD strings directly
-          if (ev.start === date) {
+          // All-day: compare YYYY-MM-DD strings directly. ev.end is the iCal
+          // exclusive end (day after the last day), so a multi-day event
+          // matches every date in [start, end).
+          if (ev.start <= date && date < ev.end) {
             allEvents.push({ title: ev.title, time: 'All day', durationMinutes: null });
           }
         } else {
@@ -236,8 +244,11 @@ export async function fetchCalendar(date: string): Promise<CalendarEvent[] | Sou
     }
 
     allEvents.sort((a, b) => {
-      if (a.time === 'All day') return -1;
-      if (b.time === 'All day') return 1;
+      const aAllDay = a.time === 'All day';
+      const bAllDay = b.time === 'All day';
+      if (aAllDay && bAllDay) return 0;
+      if (aAllDay) return -1;
+      if (bAllDay) return 1;
       return a.time.localeCompare(b.time);
     });
 
