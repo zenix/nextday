@@ -3,7 +3,8 @@ import { readFile, writeFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { CalendarEvent, SourceError } from '../types.js';
-import { getConfig } from '../routes/config.js';
+import { getPublicConfig, getSecrets } from '../config/store.js';
+import { safeFetch, UnsafeUrlError } from '../net/safeFetch.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_PATH = join(__dirname, '..', '..', 'calendar-cache.json');
@@ -19,14 +20,16 @@ interface NormalizedEvent {
   allDay: boolean;
 }
 
+// Keyed by calendar id, not URL — the URL is a secret (secrets.json) and
+// must never end up in this on-disk cache.
 interface CachedFeed {
+  id: string;
   name: string;
-  url: string;
   fetchedAt: string;
   events: NormalizedEvent[];
 }
 
-// In-memory store: url → NormalizedEvent[]
+// In-memory store: calendar id → NormalizedEvent[]
 const cache = new Map<string, NormalizedEvent[]>();
 
 function isAllDayEvent(ev: any): boolean {
@@ -79,7 +82,12 @@ async function fetchAndParseFeed(name: string, url: string): Promise<NormalizedE
   const windowStart = new Date(now - WINDOW_BACK_MS);
   const windowEnd   = new Date(now + WINDOW_FWD_MS);
 
-  const res = await fetch(url);
+  // Google's "secret address" export has no server-side date filtering, so
+  // a calendar with years of recurring-event history can legitimately be
+  // tens of megabytes of raw ICS even though the app only ever uses a
+  // 30-day-back/365-day-forward window of it. Cap generously rather than
+  // at safeFetch's generic default.
+  const res = await safeFetch(url, { timeoutMs: 20_000, maxBytes: 50 * 1024 * 1024 });
   if (!res.ok) throw new Error(`HTTP ${res.status} fetching calendar "${name}"`);
   const text = await res.text();
 
@@ -144,7 +152,7 @@ export async function loadCacheFromDisk(log: any): Promise<void> {
     const data = await readFile(CACHE_PATH, 'utf-8');
     const feeds: CachedFeed[] = JSON.parse(data);
     for (const feed of feeds) {
-      cache.set(feed.url, feed.events);
+      cache.set(feed.id, feed.events);
     }
     log.info(`Calendar: loaded ${feeds.length} feed(s) from disk cache`);
   } catch {
@@ -157,7 +165,7 @@ async function writeCacheToDisk(feeds: CachedFeed[]): Promise<void> {
 }
 
 export async function refreshCalendarCache(log: any): Promise<void> {
-  const config = await getConfig();
+  const [config, secrets] = await Promise.all([getPublicConfig(), getSecrets()]);
   const calendars = config.calendars || [];
   if (calendars.length === 0) {
     log.info('Calendar: no calendars configured, skipping refresh');
@@ -169,13 +177,22 @@ export async function refreshCalendarCache(log: any): Promise<void> {
 
   await Promise.allSettled(
     calendars.map(async (cal) => {
+      const url = secrets.calendarUrls[cal.id];
+      if (!url) {
+        log.warn(`Calendar: "${cal.name}" has no URL configured, skipping`);
+        return;
+      }
       try {
-        const events = await fetchAndParseFeed(cal.name, cal.url);
-        cache.set(cal.url, events);
-        updatedFeeds.push({ name: cal.name, url: cal.url, fetchedAt: new Date().toISOString(), events });
+        const events = await fetchAndParseFeed(cal.name, url);
+        cache.set(cal.id, events);
+        updatedFeeds.push({ id: cal.id, name: cal.name, fetchedAt: new Date().toISOString(), events });
         log.info(`Calendar: "${cal.name}" — ${events.length} events cached`);
       } catch (err) {
-        log.error(`Calendar: failed to refresh "${cal.name}": ${err}`);
+        // Log the failure without the URL — undici errors frequently
+        // stringify the failing address, and for these feeds the address
+        // is itself the secret.
+        const reason = err instanceof UnsafeUrlError ? err.message : (err instanceof Error ? err.constructor.name : 'unknown error');
+        log.error(`Calendar: failed to refresh "${cal.name}": ${reason}`);
         // Keep stale data in cache; don't add to updatedFeeds so we don't overwrite disk
       }
     })
@@ -211,7 +228,7 @@ function formatHelsinkiTime(isoStr: string): string {
 
 export async function fetchCalendar(date: string): Promise<CalendarEvent[] | SourceError> {
   try {
-    const config = await getConfig();
+    const config = await getPublicConfig();
     const calendars = config.calendars || [];
     if (calendars.length === 0) return [];
 
@@ -222,7 +239,7 @@ export async function fetchCalendar(date: string): Promise<CalendarEvent[] | Sou
     const allEvents: CalendarEvent[] = [];
 
     for (const cal of calendars) {
-      const events = cache.get(cal.url) || [];
+      const events = cache.get(cal.id) || [];
       for (const ev of events) {
         if (ev.allDay) {
           // All-day: compare YYYY-MM-DD strings directly. ev.end is the iCal

@@ -61,14 +61,61 @@ export interface DayResponse {
   holiday: PublicHoliday | null;
 }
 
-export interface AppConfig {
-  port?: number;
-  calendars: Array<{ name: string; url: string }>;
+// --- Public config: safe to serialize to any authenticated client ---
+// Never contains a credential or a secret calendar URL.
+export interface PublicCalendarConfig {
+  id: string;
+  name: string;
+}
+
+export interface PublicConfig {
+  calendars: PublicCalendarConfig[];
   widgetOrder: string[];
   accentColor: string;
+  // Additional hostnames (beyond localhost/the LAN address) allowed in the
+  // Host header. See src/security/hostCheck.ts.
+  allowedHosts: string[];
+}
+
+// What GET /api/config actually returns: PublicConfig plus booleans that
+// tell the UI whether a secret is configured, never the secret itself.
+export interface ConfigResponse extends PublicConfig {
+  wilma: {
+    baseUrl: string;
+    username: string;
+    passwordSet: boolean;
+  };
+  calendars: Array<PublicCalendarConfig & { urlSet: boolean }>;
+}
+
+// --- Secrets: server-only, lives in secrets.json (mode 0600), never
+// serialized in an API response body. ---
+export interface SecretsConfig {
+  wilma: {
+    baseUrl?: string;
+    username?: string;
+    password?: string;
+  };
+  // calendar id -> secret iCal URL
+  calendarUrls: Record<string, string>;
+  auth?: {
+    salt: string;
+    hash: string;
+  };
+}
+
+// Legacy on-disk shape (pre-hardening): everything lived in one
+// config.json. Only used by the one-shot migration in src/config/store.ts.
+export interface LegacyAppConfig {
+  port?: number;
+  calendars?: Array<{ id?: string; name?: string; url?: string }>;
+  widgetOrder?: string[];
+  accentColor?: string;
   wilma?: {
     baseUrl?: string;
     username?: string;
     password?: string;
   };
+  google?: unknown;
+  [key: string]: unknown;
 }

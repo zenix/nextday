@@ -9,6 +9,8 @@ wilma_overview_*.json
 src/test-*.ts
 
 config.json
+secrets.json
+sessions.json
 .idea
 
 calendar-cache.json

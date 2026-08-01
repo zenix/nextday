@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { PublicHoliday } from '../types.js';
+import { safeFetch } from '../net/safeFetch.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_PATH = join(__dirname, '..', '..', 'holidays-cache.json');
@@ -19,7 +20,10 @@ export async function loadHolidayCacheFromDisk(log: any): Promise<void> {
 }
 
 async function fetchYear(year: number): Promise<PublicHoliday[]> {
-  const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/FI`);
+  const res = await safeFetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/FI`, {
+    timeoutMs: 10_000,
+    maxBytes: 1024 * 1024,
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data: any[] = await res.json();
   return data.map(h => ({ date: h.date, name: h.name, localName: h.localName }));

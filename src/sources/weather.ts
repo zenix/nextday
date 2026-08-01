@@ -1,4 +1,5 @@
 import { WeatherData, SourceError } from '../types.js';
+import { safeFetch } from '../net/safeFetch.js';
 
 const WMO_CODES: Record<number, string> = {
   0: 'Clear sky',
@@ -43,7 +44,7 @@ export async function fetchWeather(date: string): Promise<WeatherData | SourceEr
   }
 
   try {
-    const res = await fetch(url);
+    const res = await safeFetch(url, { timeoutMs: 10_000, maxBytes: 2 * 1024 * 1024 });
     if (!res.ok) {
       return { error: true, message: `Open-Meteo HTTP error: ${res.status}` };
     }

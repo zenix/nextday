@@ -8,7 +8,34 @@
   <meta name="theme-color" content="#0F172A">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/inter-latin.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('/fonts/inter-latin.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url('/fonts/inter-latin.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('/fonts/inter-latin.woff2') format('woff2');
+    }
 
     :root {
       --bg-color: #0F172A;
@@ -458,14 +485,14 @@
 
   <div id="app">
     <header>
-      <button class="nav-btn" onclick="navigate(-1)">
+      <button class="nav-btn" id="prevBtn" aria-label="Previous day">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <h1 class="date-title" id="dateTitle">LOADING...</h1>
-      <button class="nav-btn" onclick="navigate(1)">
+      <button class="nav-btn" id="nextBtn" aria-label="Next day">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
-      <button class="nav-btn" onclick="toggleSettings(true)">
+      <button class="nav-btn" id="openSettingsBtn" aria-label="Settings">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       </button>
     </header>
@@ -482,7 +509,7 @@
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">Settings</div>
-        <button class="close-btn" onclick="toggleSettings(false)">
+        <button class="close-btn" id="closeSettingsBtn" aria-label="Close settings">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
@@ -497,12 +524,12 @@
 
       <div class="settings-group">
         <label class="settings-label">Accent Color</label>
-        <div class="theme-picker">
-          <div class="theme-dot" style="background:#38BDF8" onclick="setAccent('#38BDF8')" data-color="#38BDF8"></div>
-          <div class="theme-dot" style="background:#A78BFA" onclick="setAccent('#A78BFA')" data-color="#A78BFA"></div>
-          <div class="theme-dot" style="background:#F472B6" onclick="setAccent('#F472B6')" data-color="#F472B6"></div>
-          <div class="theme-dot" style="background:#34D399" onclick="setAccent('#34D399')" data-color="#34D399"></div>
-          <div class="theme-dot" style="background:#FB923C" onclick="setAccent('#FB923C')" data-color="#FB923C"></div>
+        <div class="theme-picker" id="themePicker">
+          <div class="theme-dot" style="background:#38BDF8" data-color="#38BDF8"></div>
+          <div class="theme-dot" style="background:#A78BFA" data-color="#A78BFA"></div>
+          <div class="theme-dot" style="background:#F472B6" data-color="#F472B6"></div>
+          <div class="theme-dot" style="background:#34D399" data-color="#34D399"></div>
+          <div class="theme-dot" style="background:#FB923C" data-color="#FB923C"></div>
         </div>
       </div>
 
@@ -518,8 +545,8 @@
             <input type="text" id="wilmaUser" placeholder="email@example.com">
           </div>
           <div>
-            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Wilma Password</label>
-            <input type="password" id="wilmaPass" style="background:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:12px; padding:12px; color:#fff; width:100%;">
+            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Wilma Password <span id="wilmaPassStatus" style="color:var(--text-muted); font-weight:normal;"></span></label>
+            <input type="password" id="wilmaPass" placeholder="Leave blank to keep the current password" style="background:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:12px; padding:12px; color:#fff; width:100%;">
           </div>
         </div>
       </div>
@@ -527,436 +554,18 @@
       <div class="settings-group">
         <label class="settings-label">Calendars (Google iCal URLs)</label>
         <div id="calendarList" style="display:flex; flex-direction:column; gap:8px;"></div>
-        <button type="button" class="btn-primary" style="margin-top:8px;" onclick="addCalendar()">+ Add calendar</button>
+        <button type="button" class="btn-primary" style="margin-top:8px;" id="addCalendarBtn">+ Add calendar</button>
       </div>
 
       <div class="save-bar">
-        <button class="btn-primary" onclick="saveSettings()">Save Configuration</button>
+        <button class="btn-primary" id="saveSettingsBtn">Save Configuration</button>
+      </div>
+      <div class="save-bar">
+        <button type="button" class="nav-btn" id="logoutBtn" style="width:100%; justify-content:center;">Log out</button>
       </div>
     </div>
   </div>
 
-  <script>
-    let currentDate = readDateFromHash() || getTomorrow();
-    let refreshInterval = null;
-    let config = {
-      calendars: [],
-      enabledStudents: [],
-      widgetOrder: ['weather', 'kids', 'calendar'],
-      accentColor: '#38BDF8'
-    };
-    let meta = { students: [] };
-
-    function readDateFromHash() {
-      const h = location.hash.slice(1);
-      const datePart = h.split('?')[0];
-      return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : null;
-    }
-
-    function getTomorrow() {
-      const d = new Date();
-      d.setDate(d.getDate() + 1);
-      return d.toISOString().slice(0, 10);
-    }
-
-    function getToday() {
-      const d = new Date();
-      return d.toISOString().slice(0, 10);
-    }
-
-    function navigate(offset) {
-      const d = new Date(currentDate + 'T12:00:00');
-      d.setDate(d.getDate() + offset);
-      currentDate = d.toISOString().slice(0, 10);
-      location.hash = currentDate;
-    }
-
-    window.addEventListener('hashchange', () => {
-      currentDate = readDateFromHash() || getTomorrow();
-      loadDay();
-    });
-
-    window.onerror = function(msg, url, line, col, error) {
-      showError(`UI Error: ${msg} at line ${line}`);
-      return false;
-    };
-
-    async function fetchConfig() {
-      try {
-        const res = await fetch('/api/config');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const newConfig = await res.json();
-        // Merge with defaults to ensure all fields exist
-        config = { ...config, ...newConfig };
-        applyAccent(config.accentColor);
-      } catch (e) {
-        console.error('Failed to fetch config', e);
-        // Don't throw, just use defaults
-      }
-    }
-
-    async function fetchMeta() {
-      try {
-        const res = await fetch('/api/meta');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        meta = await res.json();
-      } catch (e) {
-        console.error('Failed to fetch meta', e);
-      }
-    }
-
-
-
-    function renderCalendarList() {
-      const list = document.getElementById('calendarList');
-      list.innerHTML = (config.calendars || []).map((c, i) => `
-        <div style="display:flex; gap:8px; align-items:center;">
-          <input type="text" placeholder="Name" value="${(c.name || '').replace(/"/g, '&quot;')}"
-                 data-idx="${i}" data-field="name" style="flex:0 0 30%;">
-          <input type="text" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics"
-                 value="${(c.url || '').replace(/"/g, '&quot;')}"
-                 data-idx="${i}" data-field="url" style="flex:1;">
-          <button type="button" class="order-btn" onclick="removeCalendar(${i})">✕</button>
-        </div>
-      `).join('');
-      list.querySelectorAll('input').forEach(inp => {
-        inp.addEventListener('input', e => {
-          const idx = Number(e.target.dataset.idx);
-          config.calendars[idx][e.target.dataset.field] = e.target.value;
-        });
-      });
-    }
-
-    function addCalendar() {
-      if (!Array.isArray(config.calendars)) config.calendars = [];
-      config.calendars.push({ name: '', url: '' });
-      renderCalendarList();
-    }
-
-    function removeCalendar(idx) {
-      config.calendars.splice(idx, 1);
-      renderCalendarList();
-    }
-
-    function toggleSettings(show) {
-      const modal = document.getElementById('settingsModal');
-      modal.style.display = show ? 'flex' : 'none';
-      if (show) {
-        populateSettings();
-      }
-    }
-
-    function populateSettings() {
-      if (!Array.isArray(config.calendars)) config.calendars = [];
-      renderCalendarList();
-      
-      // Populate credentials
-      document.getElementById('wilmaBaseUrl').value = config.wilma?.baseUrl || '';
-      document.getElementById('wilmaUser').value = config.wilma?.username || '';
-      document.getElementById('wilmaPass').value = config.wilma?.password || '';
-
-      renderWidgetOrder();
-      
-      // Mark active theme
-      document.querySelectorAll('.theme-dot').forEach(dot => {
-        dot.classList.toggle('active', dot.dataset.color === config.accentColor);
-      });
-    }
-
-    function renderWidgetOrder() {
-      const list = document.getElementById('widgetList');
-      list.innerHTML = config.widgetOrder.map((id, index) => `
-        <div class="widget-order-item">
-          <span>${id.charAt(0).toUpperCase() + id.slice(1)}</span>
-          <div class="order-btns">
-            <button class="order-btn" onclick="moveWidget(${index}, -1)" ${index === 0 ? 'disabled style="opacity:0.3"' : ''}>↑</button>
-            <button class="order-btn" onclick="moveWidget(${index}, 1)" ${index === config.widgetOrder.length - 1 ? 'disabled style="opacity:0.3"' : ''}>↓</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function moveWidget(index, direction) {
-      const newOrder = [...config.widgetOrder];
-      const targetIndex = index + direction;
-      [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
-      config.widgetOrder = newOrder;
-      renderWidgetOrder();
-    }
-
-    function setAccent(color) {
-      config.accentColor = color;
-      applyAccent(color);
-      document.querySelectorAll('.theme-dot').forEach(dot => {
-        dot.classList.toggle('active', dot.dataset.color === color);
-      });
-    }
-
-    function applyAccent(color) {
-      document.documentElement.style.setProperty('--accent', color);
-    }
-
-    async function saveSettings() {
-      // Collect credentials
-      config.wilma = {
-        baseUrl: document.getElementById('wilmaBaseUrl').value || undefined,
-        username: document.getElementById('wilmaUser').value || undefined,
-        password: document.getElementById('wilmaPass').value || undefined
-      };
-
-      try {
-        const res = await fetch('/api/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(config)
-        });
-        if (res.ok) {
-          toggleSettings(false);
-          loadDay();
-        }
-      } catch (e) {
-        alert('Failed to save settings');
-      }
-    }
-
-    function weatherIcon(wmoCode) {
-      if (wmoCode === 0) return '☀️';
-      if (wmoCode <= 2) return '🌤';
-      if (wmoCode === 3) return '☁️';
-      if (wmoCode <= 48) return '🌫';
-      if (wmoCode <= 67) return '🌧';
-      if (wmoCode <= 77) return '❄️';
-      if (wmoCode <= 82) return '🌦';
-      if (wmoCode <= 86) return '🌨';
-      return '⛈';
-    }
-
-    function formatDateTitle(dateStr) {
-      const d = new Date(dateStr + 'T12:00:00');
-      const today = getToday();
-      const tomorrow = getTomorrow();
-      
-      let prefix = '';
-      if (dateStr === today) prefix = 'TODAY • ';
-      else if (dateStr === tomorrow) prefix = 'TOMORROW • ';
-
-      const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(d);
-      const dayMonth = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit' }).format(d).replace(/\//g, '.');
-      
-      return (prefix + weekday + ' ' + dayMonth).toUpperCase();
-    }
-
-    function renderWeather(weather) {
-      if (!weather || weather.error) {
-        return `<div class="card"><div class="error-inline">☁️ Weather unavailable: ${weather?.message || 'Unknown error'}</div></div>`;
-      }
-
-      const hourlyHtml = weather.hourly ? `
-        <div class="weather-hourly">
-          ${weather.hourly.map(h => `
-            <div class="hourly-point">
-              <span class="hourly-time">${h.time}</span>
-              <span class="hourly-icon">${weatherIcon(h.wmoCode)}</span>
-              <span class="hourly-temp">${Math.round(h.temp)}°</span>
-            </div>
-          `).join('')}
-        </div>
-      ` : '';
-
-      return `
-        <div class="card weather-card">
-          <div class="weather">
-            <div class="weather-main">
-              <div class="weather-icon">${weatherIcon(weather.wmoCode)}</div>
-              <div class="weather-temps">
-                <span class="temp-high">${weather.tempMax}°</span>
-                <span class="temp-low">${weather.tempMin}°</span>
-                <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Pirkkala</span>
-              </div>
-            </div>
-            <div class="weather-details">
-              <div class="w-detail">💧 ${weather.precipitationMm}mm</div>
-              <div class="w-detail">💨 ${weather.windKph} km/h</div>
-            </div>
-          </div>
-          ${hourlyHtml}
-        </div>
-      `;
-    }
-
-    function renderCalendar(calendar) {
-      if (!calendar || calendar.error) {
-        return `<div class="card"><h2>YOUR DAY</h2><div class="error-inline">📅 Calendar unavailable: ${calendar?.message || 'Unknown error'}</div></div>`;
-      }
-      
-      let eventsHtml = '';
-      if (calendar.length === 0) {
-        eventsHtml = '<div class="empty-state">No events scheduled.</div>';
-      } else {
-        eventsHtml = `<ul>${calendar.map(ev => `
-          <li>
-            <div class="event">
-              <div class="event-time">${ev.time}</div>
-              <div class="event-details">
-                <div class="event-title">${ev.title}</div>
-                ${ev.durationMinutes ? `<div class="event-duration">${ev.durationMinutes} min</div>` : ''}
-              </div>
-            </div>
-          </li>
-        `).join('')}</ul>`;
-      }
-
-      return `
-        <div class="card">
-          <h2>YOUR DAY</h2>
-          ${eventsHtml}
-        </div>
-      `;
-    }
-
-    function renderKids(kids) {
-      if (!kids || kids.error) {
-        return `<div class="card"><h2>WILMA</h2><div class="error-inline">🎒 Wilma unavailable: ${kids?.message || 'Unknown error'}</div></div>`;
-      }
-
-      if (kids.length === 0) {
-        return '';
-      }
-
-      const kidsHtml = kids.map(kid => {
-        const scheduleHtml = kid.schedule.length ? kid.schedule.map(s => `<span class="subject-tag">${s.time} ${s.subject}</span>`).join(' ') : '<span class="empty-state">None</span>';
-        const hwHtml = kid.homework.length ? kid.homework.map(h => `<div class="data-item"><span><b>${h.subject}</b> — ${h.description}</span><span style="color:var(--text-muted);font-size:0.85rem;white-space:nowrap;">${h.dueDate}</span></div>`).join('') : '<span class="empty-state">None pending</span>';
-        const examsHtml = kid.exams.length ? kid.exams.map(e => `<div class="data-item"><span><b>${e.subject}</b> on ${e.date}</span></div>`).join('') : '<span class="empty-state">No upcoming exams</span>';
-
-        return `
-          <div class="kid-block">
-            <div class="kid-name">${kid.name.toUpperCase()}</div>
-            <div class="data-row">
-              <div class="data-label">Schedule</div>
-              <div class="data-content" style="display:flex; flex-wrap:wrap; gap:6px;">${scheduleHtml}</div>
-            </div>
-            <div class="data-row">
-              <div class="data-label">Homework</div>
-              <div class="data-content">${hwHtml}</div>
-            </div>
-            <div class="data-row">
-              <div class="data-label">Exams</div>
-              <div class="data-content">${examsHtml}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      return `
-        <div class="card">
-          <h2>WILMA</h2>
-          ${kidsHtml}
-        </div>
-      `;
-    }
-
-    function render(data) {
-      document.getElementById('dateTitle').innerText = formatDateTitle(data.date);
-
-      const badge = document.getElementById('holidayBadge');
-      if (data.holiday) {
-        badge.innerHTML = `<span class="holiday-pill">${data.holiday.localName}</span>`;
-        badge.style.display = 'flex';
-      } else {
-        badge.style.display = 'none';
-      }
-
-      const content = document.getElementById('content');
-      
-      let html = '';
-      config.widgetOrder.forEach(id => {
-        if (id === 'weather') html += renderWeather(data.weather);
-        if (id === 'calendar') html += renderCalendar(data.calendar);
-        if (id === 'kids') html += renderKids(data.kids);
-      });
-
-      content.innerHTML = html;
-
-      // Trigger reflow for animation
-      content.style.animation = 'none';
-      content.offsetHeight;
-      content.style.animation = 'fadeIn 0.3s ease-out';
-    }
-
-    function showLoading() {
-      document.getElementById('content').innerHTML = `
-        <div class="card loading">
-          <div class="spinner"></div>
-          <div>Fetching the day...</div>
-        </div>
-      `;
-    }
-
-    function showError(msg) {
-      document.getElementById('content').innerHTML = `
-        <div class="card error-full">
-          <div style="font-size: 2rem; margin-bottom: 10px;">⚠️</div>
-          <div>${msg}</div>
-          <button class="btn-retry" onclick="loadDay()">Retry</button>
-        </div>
-      `;
-    }
-
-    async function loadDay() {
-      showLoading();
-      document.getElementById('dateTitle').innerText = formatDateTitle(currentDate);
-      
-      const params = new URLSearchParams();
-      params.set('date', currentDate);
-      try {
-        const res = await fetch(`/api/day?${params.toString()}`);
-        if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
-        render(data);
-      } catch (e) {
-        showError('Failed to load data. Please check your connection or server logs.');
-      }
-
-      setupAutoRefresh();
-    }
-
-    function setupAutoRefresh() {
-      if (refreshInterval) clearInterval(refreshInterval);
-      
-      const today = getToday();
-      const tomorrow = getTomorrow();
-      
-      if (currentDate === today || currentDate === tomorrow) {
-        refreshInterval = setInterval(loadDay, 30 * 60 * 1000);
-      }
-    }
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => {
-          console.error('ServiceWorker registration failed: ', err);
-        });
-      });
-    }
-
-    async function init() {
-      console.log('Initializing Nextday UI...');
-      try {
-        // Run fetches in parallel
-        await Promise.allSettled([
-          fetchConfig(),
-          fetchMeta()
-        ]);
-        console.log('Config and Meta loaded');
-      } catch (e) {
-        console.error('Init error:', e);
-      }
-      
-      location.hash = currentDate;
-      loadDay();
-    }
-
-    init();
-  </script>
+  <script src="/app.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nextday — Sign in</title>
+  <meta name="theme-color" content="#0F172A">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0F172A;
+      background-image: radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.15), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+      background-attachment: fixed;
+      color: #F8FAFC;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    form {
+      width: 100%;
+      max-width: 340px;
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+    h1 {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 20px;
+      text-align: center;
+      background: -webkit-linear-gradient(45deg, #38BDF8, #8B5CF6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    input[type="password"] {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      background: #38BDF8;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    button:disabled { opacity: 0.6; cursor: default; }
+    #error {
+      color: #EF4444;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      min-height: 1.2em;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    method="post" is a safety net, not the real submit path: JS intercepts
+    the submit (see login.js) and sends JSON instead. But if that script
+    ever fails to run — e.g. blocked by CSP, as it was during hardening
+    when it was still an inline <script> here — the browser's native
+    fallback submission stays a POST instead of turning into a GET that
+    puts the passphrase in the URL (address bar, browser history, any
+    access log). It will still fail (the server expects a JSON body, not
+    form-encoded), but it fails closed instead of leaking the passphrase.
+  -->
+  <form id="loginForm" method="post" action="/api/login" autocomplete="on">
+    <h1>Nextday</h1>
+    <div id="error" role="alert"></div>
+    <input type="password" id="passphrase" name="passphrase" placeholder="Passphrase" autocomplete="current-password" autofocus required>
+    <button type="submit" id="submitBtn">Sign in</button>
+  </form>
+
+  <script src="/login.js" defer></script>
+</body>
+</html>
